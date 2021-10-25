@@ -1,6 +1,6 @@
 # Github Actions - Self Hosted Agents on AKS
 
-This repo provides instructions and configuration to setup Self Hosted Agents for Github running on an AKS cluster.  It was derived from this [article](https://github.blog/2020-08-04-github-actions-self-hosted-runners-on-google-cloud/) by John Bohannon @imjohnbo.   This project utilizes terraform and helm to provide support for a repeatable infrastructure as code approach.  The process can also be orchestrated through an **Github workflow**. 
+This repo provides instructions and configuration to setup Self Hosted Agents for Github running on an AKS cluster.  It was derived from this [article](https://github.blog/2020-08-04-github-actions-self-hosted-runners-on-google-cloud/) by [John Bohannon](https://github.com/imjohnbo).   This project utilizes terraform and helm to provide support for a repeatable infrastructure as code approach.  The process can also be orchestrated through an **Github workflow**. 
 
 ## Setup
 
