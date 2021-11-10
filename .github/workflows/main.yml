@@ -7,8 +7,7 @@ on: [push, workflow_dispatch]
 
 env:
   # Remember to convert to secret variables before merging
-  #   SUBSCRIPTION_ID: $(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r .appId)
-  AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+  SUBSCRIPTION_ID: $(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r .subscriptionId)
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
   REGION: eastus2
   CLUSTER_NAME: githubrunner
@@ -33,7 +32,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: Run setup.sh
         run: |
-          export SUBSCRIPTION_ID=$(echo $AZURE_CREDENTIALS | jq -r .subscriptionId)
+          export SUBSCRIPTION_ID=$(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r .subscriptionId)
           . ./setup.sh -c $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -s $SUBSCRIPTION_ID -r $REGION
 
       # Runs a set of commands using the runners shell
