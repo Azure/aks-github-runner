@@ -11,7 +11,7 @@ env:
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
   REGION: eastus2
   CLUSTER_NAME: githubrunner
-  STORAGE_ACCOUNT_NAME: runnerstorage
+  STORAGE_ACCOUNT_NAME: runnerstorage6594
   GITHUB_REPO_OWNER: tristanang
   GITHUB_REPO_NAME: aks-github-runner
   
