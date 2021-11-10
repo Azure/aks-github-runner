@@ -15,7 +15,6 @@ env:
   GITHUB_REPO_OWNER: tristanang
   GITHUB_REPO_NAME: aks-github-runner
   
-  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -32,14 +31,24 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       # Runs a single command using the runners shell
       - name: Run setup.sh
+        id: setup_storage
         run: |
-          export CONTAINER_NAME=$(echo "${CLUSTER_NAME}" | tr '[:upper:]' '[:lower:]')tfstate
+          CONTAINER_NAME=$(echo "${CLUSTER_NAME}" | tr '[:upper:]' '[:lower:]')tfstate
           az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
-          export ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
+          ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
           az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY
-
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
-        run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          echo "::set-output name=container_name::$CONTAINER_NAME"
+          echo "::set-output name=account_key::$ACCOUNT_KEY"
+      - uses: tristanang/aks_create_action@main
+        with:
+          CLUSTER_NAME: ${{ env.CLUSTER_NAME }}
+          RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+          STORAGE_ACCOUNT_NAME: ${{ env.STORAGE_ACCOUNT_NAME }}
+          STORAGE_CONTAINER_NAME: ${{ steps.setup_storage.outputs.container_name }}
+          STORAGE_ACCESS_KEY: ${{ steps.setup_storage.outputs.account_key }}
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+          ACTION_TYPE: create
+          CREATE_ACR: true
