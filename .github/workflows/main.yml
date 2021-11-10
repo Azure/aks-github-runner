@@ -7,6 +7,7 @@ on: workflow_dispatch
 
 env:
   # Remember to convert to secret variables before merging
+  SUBSCRIPTION_ID: $(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r .appId)
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
   CLUSTER_NAME: githubrunner
   GITHUB_REPO_OWNER: tristanang
