@@ -31,7 +31,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: Run setup.sh
         run: |
-          export SUBSCRIPTION_ID=$(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r .appId)
+          export SUBSCRIPTION_ID=$(echo ${{ secrets.AZURE_CREDENTIALS }} | jq -r .subscriptionId)
           . ./setup.sh -c $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -s $SUBSCRIPTION_ID -r $REGION
 
       # Runs a set of commands using the runners shell
