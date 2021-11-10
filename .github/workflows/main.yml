@@ -5,6 +5,13 @@ name: AKS Self Hosted Runner
 # Controls when the workflow will run
 on: workflow_dispatch
 
+env:
+  # Remember to convert to secret variables before merging
+  RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+  CLUSTER_NAME: githubrunner
+  GITHUB_REPO_OWNER: tristanang
+  GITHUB_REPO_NAME: aks-github-runner
+  
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
@@ -20,7 +27,7 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
       # Runs a single command using the runners shell
-      - name: Run a one-line script
+      - name: Run setup.sh
         run: echo Hello, world!
 
       # Runs a set of commands using the runners shell
