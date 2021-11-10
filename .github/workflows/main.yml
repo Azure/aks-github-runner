@@ -32,7 +32,11 @@ jobs:
       # Runs a single command using the runners shell
       - name: Run setup.sh
         run: |
-          . ./setup.sh -c $CLUSTER_NAME -g $RESOURCE_GROUP_NAME -s $SUBSCRIPTION_ID -r $REGION
+          export STORAGE_ACCOUNT_NAME=$(echo "${RESOURCE_GROUP_NAME}" | tr '[:upper:]' '[:lower:]')$RANDOM
+          export CONTAINER_NAME=$(echo "${CLUSTER_NAME}" | tr '[:upper:]' '[:lower:]')tfstate
+          az storage account create --resource-group $resource_group_name --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
+          export ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
+          az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
