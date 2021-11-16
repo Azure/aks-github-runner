@@ -52,3 +52,8 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
           ACTION_TYPE: create
           CREATE_ACR: true
+      # Build Docker image
+      - name: Build image
+        run: |
+          az configure --defaults acr=${RESOURCE_GROUP_NAME}
+          az acr build -t ghrunner:${GITHUB_SHA} ./ghrdocker
