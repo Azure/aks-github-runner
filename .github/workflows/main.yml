@@ -14,7 +14,7 @@ env:
   STORAGE_ACCOUNT_NAME: runnerstorage6594
   GITHUB_REPO_OWNER: tristanang
   GITHUB_REPO_NAME: aks-github-runner
-  GITHUB_REPO_URL: github.com/tristanang/aks-github-runner
+  GITHUB_REPO_URL: https://github.com/tristanang/aks-github-runner
   HELM_EXPERIMENTAL_OCI: 1
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
