@@ -78,6 +78,7 @@ jobs:
           helm pull oci://${CLUSTER_NAME}.azurecr.io/ghrunner/ghr --version 0.0.1
           helm install ghrunner ghr-0.0.1.tgz
             --set image.repository=${CLUSTER_NAME}.azurecr.io/ghrunner \
+            --set image.tag=${GITHUB_SHA} \
             --set ghr.github_token=${GH_TOKEN} \
             --set ghr.repo_name=${GITHUB_REPO_NAME} \
             --set ghr.repo_url=${GITHUB_REPO_URL} \
