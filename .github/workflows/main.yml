@@ -65,7 +65,7 @@ jobs:
           az acr login -n ${CLUSTER_NAME}
           cd ./ghrhelm
           helm package .
-          helm push ghr-${GITHUB_SHA}.tgz oci://${CLUSTER_NAME}.azurecr.io/ghrunner
+          helm push ghr-0.0.1.tgz oci://${CLUSTER_NAME}.azurecr.io/ghrunner
       - name: AKS set context
         uses: azure/aks-set-context@v1
         with:
@@ -75,8 +75,8 @@ jobs:
       - name: Deploy
         run: |
           az configure --defaults acr=${CLUSTER_NAME}
-          helm pull oci://${CLUSTER_NAME}.azurecr.io/ghrunner/ghr --version ${GITHUB_SHA}
-          helm install ghrunner ghr-${VERSION}.tgz
+          helm pull oci://${CLUSTER_NAME}.azurecr.io/ghrunner/ghr --version 0.0.1
+          helm install ghrunner ghr-0.0.1.tgz
             --set image.repository=${CLUSTER_NAME}.azurecr.io/ghrunner \
             --set ghr.github_token=${GH_TOKEN} \
             --set ghr.repo_name=${GITHUB_REPO_NAME} \
