@@ -77,7 +77,7 @@ jobs:
           cd ./ghrhelm
           # az configure --defaults acr=${CLUSTER_NAME}
           # helm pull oci://${CLUSTER_NAME}.azurecr.io/ghrunner/ghr --version 0.0.1
-          helm install ghrunner ghr-0.0.1.tgz
+          helm install ghrunner ghr-0.0.1.tgz \
             --set image.repository=${CLUSTER_NAME}.azurecr.io/ghrunner \
             --set image.tag=${GITHUB_SHA} \
             --set ghr.github_token=${GH_TOKEN} \
