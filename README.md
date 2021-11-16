@@ -12,7 +12,7 @@ Ensure you have the following dependencies:
 - [jq](https://stedolan.github.io/jq/download/)
 - [azure-cli](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) (logged in to a subscription where you have contributor rights)
 - [github-cli](https://cli.github.com/) (logged in)
-- [Create a github personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) -- and export the value -- export GITHUB_TOKEN=paste_your_token_here
+- [Create a github personal access token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token) -- and export the value -- export GH_TOKEN=paste_your_token_here
 
 Run the setup.sh script
 - Syntax: **. ./setup.sh** [-c CLUSTER_NAME] [-g RESOURCE_GROUP_NAME] [-s SUBSCRIPTION_ID] [-r REGION] (the extra dot is important)
@@ -38,7 +38,7 @@ This uses the repo makefile to create your AKS cluster, create an ACR, and deplo
 ## Next steps
 
 - dynamically set repo owner/repo name
-- check for GITHUB_TOKEN before deploying
+- check for GH_TOKEN before deploying
 - remove helm install note
 - check for all other variables in makefile (gh secret get?)
 - add workflow / instructions

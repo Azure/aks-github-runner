@@ -56,7 +56,7 @@ deploy:
 	helm pull oci://${RESOURCE_GROUP_NAME}.azurecr.io/ghrunner/ghr --version ${VERSION} && \
 	helm install ghrunner ghr-${VERSION}.tgz \
 	--set image.repository=${RESOURCE_GROUP_NAME}.azurecr.io/ghrunner \
-	--set ghr.github_token=${GITHUB_TOKEN} && \
+	--set ghr.github_token=${GH_TOKEN} && \
 	--set ghr.repo_name=${GITHUB_REPO_NAME} && \
 	--set ghr.repo_url=${GITHUB_REPO_URL} && \
 	--set ghr.repo_owner=${GITHUB_REPO_OWNER} && \
