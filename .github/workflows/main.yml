@@ -55,5 +55,5 @@ jobs:
       # Build Docker image
       - name: Build image
         run: |
-          az configure --defaults acr=${RESOURCE_GROUP_NAME}
+          az configure --defaults acr=${CLUSTER_NAME}
           az acr build -t ghrunner:${GITHUB_SHA} ./ghrdocker
