@@ -14,6 +14,8 @@ env:
   STORAGE_ACCOUNT_NAME: runnerstorage6594
   GITHUB_REPO_OWNER: tristanang
   GITHUB_REPO_NAME: aks-github-runner
+  GITHUB_REPO_URL: github.com/tristanang/aks-github-runner
+  HELM_EXPERIMENTAL_OCI: 1
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -53,7 +55,30 @@ jobs:
           ACTION_TYPE: create
           CREATE_ACR: true
       # Build Docker image
-      - name: Build image
+      - name: Build and push image
         run: |
           az configure --defaults acr=${CLUSTER_NAME}
           az acr build -t ghrunner:${GITHUB_SHA} ./ghrdocker
+      - name: Helm
+        run: |
+          az configure --defaults acr=${CLUSTER_NAME}
+          az acr login -n ${CLUSTER_NAME}
+          cd ./ghrhelm
+          helm package .
+          helm push ghr-${GITHUB_SHA}.tgz oci://${CLUSTER_NAME}.azurecr.io/ghrunner
+      - name: AKS set context
+        uses: azure/aks-set-context@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }} # Azure credentials
+          resource-group: ${{ secrets.RESOURCE_GROUP_NAME }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+      - name: Deploy
+        run: |
+          az configure --defaults acr=${CLUSTER_NAME}
+          helm pull oci://${CLUSTER_NAME}.azurecr.io/ghrunner/ghr --version ${GITHUB_SHA}
+          helm install ghrunner ghr-${VERSION}.tgz
+            --set image.repository=${CLUSTER_NAME}.azurecr.io/ghrunner \
+            --set ghr.github_token=${GH_TOKEN} \
+            --set ghr.repo_name=${GITHUB_REPO_NAME} \
+            --set ghr.repo_url=${GITHUB_REPO_URL} \
+            --set ghr.repo_owner=${GITHUB_REPO_OWNER} \
