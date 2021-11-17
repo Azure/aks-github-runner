@@ -12,10 +12,11 @@ env:
   REGION: eastus2
   CLUSTER_NAME: githubrunner
   STORAGE_ACCOUNT_NAME: runnerstorage6594
-  GITHUB_REPO_OWNER: tristanang
-  GITHUB_REPO_NAME: aks-github-runner
+  REPO_OWNER: tristanang
+  REPO_NAME: aks-github-runner
   GITHUB_REPO_URL: https://github.com/tristanang/aks-github-runner
   HELM_EXPERIMENTAL_OCI: 1
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -81,6 +82,6 @@ jobs:
             --set image.repository=${CLUSTER_NAME}.azurecr.io/ghrunner \
             --set image.tag=${GITHUB_SHA} \
             --set ghr.github_token=${GH_TOKEN} \
-            --set ghr.repo_name=${GITHUB_REPO_NAME} \
+            --set ghr.repo_name=${REPO_NAME} \
             --set ghr.repo_url=${GITHUB_REPO_URL} \
-            --set ghr.repo_owner=${GITHUB_REPO_OWNER} \
+            --set ghr.repo_owner=${REPO_OWNER} \
