@@ -37,7 +37,7 @@ jobs:
           echo "::set-output name=account_key::$ACCOUNT_KEY"
 
       # Create AKS Cluster
-      - uses: Azure/aks_create_action@main
+      - uses: gambtho/aks_create_action@main
         with:
           CLUSTER_NAME: ${{ env.CLUSTER_NAME }}
           RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
