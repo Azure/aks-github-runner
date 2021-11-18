@@ -1,48 +1,43 @@
-# This is a basic workflow to help you get started with Actions
-
+# This workflow creates a self-hosted Github Runner on AKS
 name: AKS Self Hosted Runner
 
-# Controls when the workflow will run
-on: [push, workflow_dispatch]
+on: workflow_dispatch
 
 env:
-  # Remember to convert to secret variables before merging
-  SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
   RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
-  REGION: eastus2
-  CLUSTER_NAME: githubrunner
-  STORAGE_ACCOUNT_NAME: runnerstorage6594
-  REPO_OWNER: tristanang
-  REPO_NAME: aks-github-runner
-  GITHUB_REPO_URL: https://github.com/tristanang/aks-github-runner
-  HELM_EXPERIMENTAL_OCI: 1
+  REGION: ${{ secrets.REGION }}
+  CLUSTER_NAME: ${{ secrets.CLUSTER_NAME }}
+  REPO_OWNER: ${{ secrets.REPO_OWNER }}
+  REPO_NAME: ${{ secrets.REPO_NAME }}
+  REPO_URL: ${{ secrets.REPO_URL }}
   GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  HELM_EXPERIMENTAL_OCI: 1
   
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
+
       - uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-      # Runs a single command using the runners shell
-      - name: Run setup.sh
+
+      - name: Create storage account and container
         id: setup_storage
         run: |
+          STORAGE_ACCOUNT_NAME=$(echo "$RESOURCE_GROUP_NAME" | tr '[:upper:]' '[:lower:]')$RANDOM
           CONTAINER_NAME=$(echo "${CLUSTER_NAME}" | tr '[:upper:]' '[:lower:]')tfstate
           az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
           ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
           az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY
+          echo "::set-output name=container_name::$STORAGE_ACCOUNT_NAME"
           echo "::set-output name=container_name::$CONTAINER_NAME"
           echo "::set-output name=account_key::$ACCOUNT_KEY"
-      - uses: tristanang/aks_create_action@main
+
+      # Create AKS Cluster
+      - uses: Azure/aks_create_action@main
         with:
           CLUSTER_NAME: ${{ env.CLUSTER_NAME }}
           RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
@@ -55,25 +50,31 @@ jobs:
           ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
           ACTION_TYPE: create
           CREATE_ACR: true
-      # Build Docker image
-      - name: Build and push image
+
+      - name: Attach ACR to Cluster (bug: missing functionality in aks_create_action)
+        run: az aks update -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME --attach-acr $CLUSTER_NAME
+
+      - name: Build and push Github Runner image
         run: |
           az configure --defaults acr=${CLUSTER_NAME}
           az acr build -t ghrunner:${GITHUB_SHA} ./ghrdocker
-      - name: Helm
+
+      - name: Create Helm chart
         run: |
           # az configure --defaults acr=${CLUSTER_NAME}
           # az acr login -n ${CLUSTER_NAME}
           cd ./ghrhelm
           helm package .
           # helm push ghr-0.0.1.tgz oci://${CLUSTER_NAME}.azurecr.io/ghrunner
+
       - name: AKS set context
         uses: azure/aks-set-context@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }} # Azure credentials
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
           resource-group: ${{ secrets.RESOURCE_GROUP_NAME }}
           cluster-name: ${{ env.CLUSTER_NAME }}
-      - name: Deploy
+
+      - name: Deploy via Helm
         run: |
           cd ./ghrhelm
           # az configure --defaults acr=${CLUSTER_NAME}
@@ -83,5 +84,5 @@ jobs:
             --set image.tag=${GITHUB_SHA} \
             --set ghr.github_token=${GH_TOKEN} \
             --set ghr.repo_name=${REPO_NAME} \
-            --set ghr.repo_url=${GITHUB_REPO_URL} \
+            --set ghr.repo_url=${REPO_URL} \
             --set ghr.repo_owner=${REPO_OWNER} \
