@@ -51,9 +51,6 @@ jobs:
           ACTION_TYPE: create
           CREATE_ACR: true
 
-      - name: Attach ACR to Cluster
-        run: az aks update -n $CLUSTER_NAME -g $RESOURCE_GROUP_NAME --attach-acr $CLUSTER_NAME
-
       - name: Build and push Github Runner image
         run: |
           az configure --defaults acr=${CLUSTER_NAME}
