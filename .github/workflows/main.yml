@@ -32,7 +32,7 @@ jobs:
           az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
           ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
           az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY
-          echo "::set-output name=container_name::$STORAGE_ACCOUNT_NAME"
+          echo "::set-output name=storage_account_name::$STORAGE_ACCOUNT_NAME"
           echo "::set-output name=container_name::$CONTAINER_NAME"
           echo "::set-output name=account_key::$ACCOUNT_KEY"
 
@@ -41,7 +41,7 @@ jobs:
         with:
           CLUSTER_NAME: ${{ env.CLUSTER_NAME }}
           RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
-          STORAGE_ACCOUNT_NAME: ${{ env.STORAGE_ACCOUNT_NAME }}
+          STORAGE_ACCOUNT_NAME: ${{ steps.setup_storage.outputs.storage_account_name }}
           STORAGE_CONTAINER_NAME: ${{ steps.setup_storage.outputs.container_name }}
           STORAGE_ACCESS_KEY: ${{ steps.setup_storage.outputs.account_key }}
           ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
