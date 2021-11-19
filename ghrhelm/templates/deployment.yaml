@@ -45,7 +45,7 @@ spec:
                   [
                     "/bin/bash",
                     "-c",
-                    'RUNNER_ALLOW_RUNASROOT=1 ./config.sh remove --token $(curl -sS --request POST --url "https://api.github.com/repos/{{ .Values.ghr.repo_owner }}/{{ .Values.repo_name }}/actions/runners/remove-token" --header "authorization: Bearer ${GITHUB_TOKEN}"  --header "content-type: application/json" | jq -r .token)',
+                    'RUNNER_ALLOW_RUNASROOT=1 ./config.sh remove --token $(curl -sS --request POST --url "https://api.github.com/repos/{{ .Values.ghr.repo_owner }}/{{ .Values.repo_name }}/actions/runners/remove-token" --header "authorization: Bearer ${GH_TOKEN}"  --header "content-type: application/json" | jq -r .token)',
                   ]   
           ports:
             - name: https

@@ -1,0 +1,85 @@
+# This workflow creates a self-hosted Github Runner on AKS
+name: AKS Self Hosted Runner
+
+on: workflow_dispatch
+
+env:
+  RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+  REGION: ${{ secrets.REGION }}
+  CLUSTER_NAME: ${{ secrets.CLUSTER_NAME }}
+  REPO_OWNER: ${{ secrets.REPO_OWNER }}
+  REPO_NAME: ${{ secrets.REPO_NAME }}
+  REPO_URL: ${{ secrets.REPO_URL }}
+  GH_TOKEN: ${{ secrets.GH_TOKEN }}
+  HELM_EXPERIMENTAL_OCI: 1
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create storage account and container
+        id: setup_storage
+        run: |
+          STORAGE_ACCOUNT_NAME=$(echo "$RESOURCE_GROUP_NAME" | tr '[:upper:]' '[:lower:]')$RANDOM
+          CONTAINER_NAME=$(echo "${CLUSTER_NAME}" | tr '[:upper:]' '[:lower:]')tfstate
+          az storage account create --resource-group $RESOURCE_GROUP_NAME --name $STORAGE_ACCOUNT_NAME --sku Standard_LRS --encryption-services blob
+          ACCOUNT_KEY=$(az storage account keys list --resource-group $RESOURCE_GROUP_NAME --account-name $STORAGE_ACCOUNT_NAME --query '[0].value' -o tsv)
+          az storage container create --name $CONTAINER_NAME --account-name $STORAGE_ACCOUNT_NAME --account-key $ACCOUNT_KEY
+          echo "::set-output name=storage_account_name::$STORAGE_ACCOUNT_NAME"
+          echo "::set-output name=container_name::$CONTAINER_NAME"
+          echo "::set-output name=account_key::$ACCOUNT_KEY"
+
+      # Create AKS Cluster
+      - uses: gambtho/aks_create_action@main
+        with:
+          CLUSTER_NAME: ${{ env.CLUSTER_NAME }}
+          RESOURCE_GROUP_NAME: ${{ secrets.RESOURCE_GROUP_NAME }}
+          STORAGE_ACCOUNT_NAME: ${{ steps.setup_storage.outputs.storage_account_name }}
+          STORAGE_CONTAINER_NAME: ${{ steps.setup_storage.outputs.container_name }}
+          STORAGE_ACCESS_KEY: ${{ steps.setup_storage.outputs.account_key }}
+          ARM_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          ARM_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
+          ARM_TENANT_ID: ${{ secrets.TENANT_ID }}
+          ACTION_TYPE: create
+          CREATE_ACR: true
+
+      - name: Build and push Github Runner image
+        run: |
+          az configure --defaults acr=${CLUSTER_NAME}
+          az acr build -t ghrunner:${GITHUB_SHA} ./ghrdocker
+
+      - name: Create Helm chart
+        run: |
+          # az configure --defaults acr=${CLUSTER_NAME}
+          # az acr login -n ${CLUSTER_NAME}
+          cd ./ghrhelm
+          helm package .
+          # helm push ghr-0.0.1.tgz oci://${CLUSTER_NAME}.azurecr.io/ghrunner
+
+      - name: AKS set context
+        uses: azure/aks-set-context@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          resource-group: ${{ secrets.RESOURCE_GROUP_NAME }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
+
+      - name: Deploy via Helm
+        run: |
+          cd ./ghrhelm
+          # az configure --defaults acr=${CLUSTER_NAME}
+          # helm pull oci://${CLUSTER_NAME}.azurecr.io/ghrunner/ghr --version 0.0.1
+          helm install ghrunner ghr-0.0.1.tgz \
+            --set image.repository=${CLUSTER_NAME}.azurecr.io/ghrunner \
+            --set image.tag=${GITHUB_SHA} \
+            --set ghr.github_token=${GH_TOKEN} \
+            --set ghr.repo_name=${REPO_NAME} \
+            --set ghr.repo_url=${REPO_URL} \
+            --set ghr.repo_owner=${REPO_OWNER} \
